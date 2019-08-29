@@ -1,7 +1,7 @@
 [package]
 name = "void_func_return"
 version = "0.1.0"
-authors = ["fooofei <aihujianfei@gmail.com>"]
+authors = ["fooofei"]
 edition = "2018"
 
 [dependencies]
