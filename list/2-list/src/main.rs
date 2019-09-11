@@ -43,6 +43,8 @@ impl<T> List<T> {
 }
 
 // 我实现的比这个代码更少 https://rust-unofficial.github.io/too-many-lists/second-iter.html
+// 不推荐把 & Option<...> &mut Option<...> 这种定义
+/*
 pub struct Iter<'a, T> {
     next: &'a Link<T>,
 }
@@ -62,78 +64,54 @@ impl<'a, T> Iterator for Iter<'a, T> {
         })
     }
 }
+*/
+
+pub struct Iter<'a, T> {
+    nextv: Option<&'a Node<T>>,
+}
+impl <T> List<T> {
+    pub fn iter(&self) -> Iter<'_,T>{
+        Iter{
+            nextv: self.head.as_ref().map(|e|& **e)
+        }
+    }
+}
+impl<'a,T> Iterator for Iter<'a,T> {
+    type Item = &'a T;
+    fn next(&mut self)->Option<Self::Item> {
+        self.nextv.take().map(|e|{
+            self.nextv = e.next.as_ref().map(|e0|{& **e0});
+            & e.elem
+        })
+    }
+}
 
 // the way in https://rust-unofficial.github.io/too-many-lists/second-iter-mut.html
-pub struct IterMut1<'a,T> {
+pub struct IterMut<'a,T> {
     nextv:Option<&'a mut Node<T>>
 }
 impl<T> List<T> {
-    pub fn iter_mut1(&mut self) -> IterMut1<'_,T> {
-        IterMut1{
-            nextv:self.head.as_mut().map(|node|{
+    pub fn iter_mut(&mut self) -> IterMut<'_,T> {
+        IterMut{
+            nextv:self.head.as_mut().map(|e|{
                 // node = &mut std::boxed::Box<Node<T>>
-                &mut **node
+                &mut **e
             })
         }
     }
 }
-impl<'a,T> Iterator for IterMut1<'a,T> {
+impl<'a,T> Iterator for IterMut<'a,T> {
     type Item = &'a mut T;
     fn next(&mut self) -> Option<Self::Item> {
-        self.nextv.take().map(|node|{
-            self.nextv = node.next.as_mut().map(|node2|{
-                &mut **node2
+        self.nextv.take().map(|e|{
+            self.nextv = e.next.as_mut().map(|e0|{
+                &mut **e0
             });
-            &mut node.elem
+            &mut e.elem
         })
     }
 }
 
-pub struct IterMut<'a, T> {
-    nextv: &'a mut Link<T>,
-}
-impl<T> List<T> {
-    pub fn iter_mut(&mut self) -> IterMut<'_, T> {
-        IterMut {
-            nextv: &mut self.head,
-        }
-    }
-}
-
-// 20190907 始终过不去
-impl<'a, T> Iterator for IterMut<'a, T> {
-    type Item = &'a mut T;
-    fn next(&mut self) -> Option<Self::Item> {
-        // nextv = &'a mut std::option::Option<std::boxed::Box<Node<T>>>
-        // nextv.take() = std::option::Option<std::boxed::Box<Node<T>>>
-        self.nextv.take().as_mut().map(|node1| {
-            // &mut **node1 = &mut Node<T>
-            let tmp = &mut **node1;
-            self.nextv = &mut tmp.next;
-            &mut tmp.elem
-        })
-
-        // head = found type `&mut std::option::Option<std::boxed::Box<Node<T>>>`
-//        head.as_mut().map(|v| {
-//            // v = `&mut std::boxed::Box<Node<T>>`
-//            let ref mut node = v.as_mut();
-//            self.nextv = &mut node.next;
-//        });
-        //        let lk = head.as_mut();
-        //        // lk = std::option::Option<&mut std::boxed::Box<Node<T>>>
-        //        if let Some(v) = lk {
-        //            // v =  `&mut std::boxed::Box<Node<T>>`
-        //            let node = v.as_mut();
-        //            // node = `&mut Node<T>`
-        //            return Some(&mut node.elem);
-        //        }
-        //        lk.map(|v| {
-        //            // v = `&mut std::boxed::Box<Node<T>>`
-        //            self.next = &mut v.next;
-        //            &mut v.elem
-        //        })
-    }
-}
 
 #[test]
 fn test_list1() {
@@ -210,9 +188,6 @@ fn test_peek1() {
     assert_eq!(list.peek(), Some(&3));
     assert_eq!(list.peek_mut(), Some(&mut 3));
 
-    // 晕了， 这里到底是否需要 map(|&mut value|)  ?
-    // 是不是可以说 value 就是 &mut 类型
-    // 闭包是不用写 &mut 吗？
     list.peek_mut().map(|value| *value = 42);
     assert_eq!(list.peek(), Some(&42));
     assert_eq!(list.peek_mut(), Some(&mut 42));
@@ -318,7 +293,7 @@ fn test_iter_mut1() {
     list.push(String::from("c"));
 
     let _ = list
-        .iter_mut1()
+        .iter_mut()
         .map(|x| x.push_str(&String::from("1")))
         .collect::<Vec<()>>();
 
