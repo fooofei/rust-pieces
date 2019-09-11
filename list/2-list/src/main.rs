@@ -17,6 +17,7 @@ impl<T> List<T> {
         List { head: None }
     }
 
+    // push to front
     pub fn push(&mut self, v: T) {
         let new_node = Box::new(Node {
             elem: v,
@@ -25,6 +26,7 @@ impl<T> List<T> {
         self.head = Some(new_node);
     }
 
+    // pop front
     pub fn pop(&mut self) -> Option<T> {
         self.head.take().map(|v| {
             let value = v.elem;
