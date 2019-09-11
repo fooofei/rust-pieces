@@ -42,6 +42,13 @@ impl<T> List<T> {
     }
 }
 
+impl <T> Drop for List<T> {
+    fn drop(&mut self) {
+        let _ = self.head.take();
+        // 有必要遍历释放吗？
+    }
+}
+
 // 我实现的比这个代码更少 https://rust-unofficial.github.io/too-many-lists/second-iter.html
 // 不推荐把 & Option<...> &mut Option<...> 这种定义
 /*
