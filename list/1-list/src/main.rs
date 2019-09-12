@@ -1,34 +1,22 @@
 use std::mem;
 
 #[derive(Debug)]
-struct Node<T>
-where
-    T: Copy,
-{
+struct Node<T: Copy> {
     elem: T,
     next: Link<T>,
 }
 
 #[derive(Debug)]
-enum Link<T>
-where
-    T: Copy,
-{
+enum Link<T: Copy> {
     Empty,
     More(Box<Node<T>>),
 }
 
-pub struct List<T>
-where
-    T: Copy,
-{
+pub struct List<T: Copy> {
     head: Link<T>,
 }
 
-impl<T> List<T>
-where
-    T: Copy,
-{
+impl<T: Copy> List<T> {
     pub fn new() -> Self {
         List { head: Link::Empty }
     }
@@ -51,10 +39,7 @@ where
     }
 }
 
-impl<T> Drop for List<T>
-where
-    T: Copy,
-{
+impl<T: Copy> Drop for List<T> {
     fn drop(&mut self) {
         let mut link = mem::replace(&mut self.head, Link::Empty);
         while let Link::More(mut boxed_node) = link {
