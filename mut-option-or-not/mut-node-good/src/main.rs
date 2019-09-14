@@ -38,7 +38,7 @@ impl <'a> NodeMutRef<'a> {
         self
     }
 
-    // 步骤拆分 // 测试是否能够做到返回可修改引用 // 可以
+    // 步骤拆分 // 测试是否能够做到返回可修改借用 // 可以
     fn test_mut(&mut self) -> Option<&mut String> {
         self.n.as_mut().map(|e|{
             //self.n = Some(e);
